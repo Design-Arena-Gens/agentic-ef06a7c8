@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id               String      @id @default(cuid())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  firstName        String
+  lastName         String?
+  phone            String
+  email            String?
+  city             String?
+  studentGrade     String?
+  preferredExam    String
+  source           LeadSource
+  sourceId         String?
+  campaignName     String?
+  adGroupName      String?
+  notes            String?
+  status           LeadStatus  @default(NEW)
+  callCount        Int         @default(0)
+  lastContactedAt  DateTime?
+  demoScheduledAt  DateTime?
+  guardianName     String?
+  studentName      String?
+  metadata         Json?
+  callLogs         CallLog[]
+  callSessions     CallSession[]
+}
+
+model CallLog {
+  id             String         @id @default(cuid())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  lead           Lead           @relation(fields: [leadId], references: [id])
+  leadId         String
+  direction      CallDirection
+  twilioCallSid  String?        @unique
+  transcript     String?
+  outcome        CallOutcome?
+  duration       Int?
+  notes          String?
+  recordingUrl   String?
+  demoAccepted   Boolean?
+  followUpAt     DateTime?
+  sessionId      String?
+  gatherData     Json?
+}
+
+model CallSession {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  lead          Lead?         @relation(fields: [leadId], references: [id])
+  leadId        String?
+  twilioCallSid String?       @unique
+  stepIndex     Int           @default(0)
+  context       Json?
+  lastPrompt    String?
+  lastResponse  String?
+  status        SessionStatus @default(ACTIVE)
+}
+
+enum LeadSource {
+  FACEBOOK
+  GOOGLE_ADS
+  MANUAL
+  REFERRAL
+  UNKNOWN
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  DEMO_SCHEDULED
+  DEMO_COMPLETED
+  ENROLLED
+  DISQUALIFIED
+}
+
+enum CallDirection {
+  OUTBOUND
+  INBOUND
+  CALLBACK
+}
+
+enum CallOutcome {
+  DEMO_SCHEDULED
+  DEMO_DECLINED
+  CALLBACK_REQUESTED
+  NO_ANSWER
+  BUSY
+  WRONG_NUMBER
+  FOLLOW_UP
+  QUALIFIED
+  UNQUALIFIED
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  FAILED
+}
